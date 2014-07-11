@@ -1,0 +1,16 @@
+# See https://atom.io/docs/latest/creating-a-package#menus for more details
+'context-menu':
+  '.overlayer':
+      'Enable saviors-editor': 'saviors-editor:toggle'
+
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'saviors-editor'
+      'submenu': [
+        { 'label': 'Toggle', 'command': 'saviors-editor:toggle' }
+      ]
+    ]
+  }
+]
