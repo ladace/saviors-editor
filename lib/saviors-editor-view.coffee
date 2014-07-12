@@ -103,11 +103,22 @@ class SaviorsEditorView extends View
               ctx.lineTo(path[0].x, path[0].y)
             ctx.stroke()
 
+            startPoint = null
             for v in path
+              if v.startpoint
+                startPoint = v
+              ctx.strokeStyle = "yellow"
               if v.stop
                 ctx.beginPath()
                 ctx.arc v.x, v.y, 5, 0, 2 *Math.PI
                 ctx.stroke()
+
+            # Draw start point
+            if !startPoint? then startPoint = path[0]
+            ctx.strokeStyle = "rgb(0.5, 1, 0.5)"
+            ctx.beginPath()
+            ctx.rect startPoint.x - 6, startPoint.y - 6, 12, 12
+            ctx.stroke()
 
     if data["tileset"]?
       tileset = new Image()
