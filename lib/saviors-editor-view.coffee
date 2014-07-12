@@ -1,5 +1,5 @@
 {View} = require 'atom'
-#refer to https://github.com/atom/markdown-preview
+PathWatcher = require 'pathwatcher'
 jsyaml = require 'js-yaml'
 fs = require 'fs'
 
@@ -33,20 +33,24 @@ class SaviorsEditorView extends View
 
     if @hasParent()
       @unsubscribe editor.getBuffer()
+      if @tilemapWatcher?
+        @tilemapWatcher.close()
+        @tilemapWatcher = null
       @detach()
     else
       @subscribe editor.getBuffer(), 'contents-modified', =>
-        @render(@getText())
+        @render(@getText(editor))
       @subscribe editor, 'cursors-moved', =>
         @renderCursor(editor)
-      @render(@getText())
+      @render(@getText(editor))
       @renderCursor(editor)
       atom.workspaceView.appendToRight(this)
 
   render: (data) ->
     @clearMessage()
 
-    dir = atom.workspace.activePaneItem.getPath().match(/.*\//)[0]
+    editor = atom.workspace.activePaneItem
+    dir = editor.getPath().match(/.*\//)[0]
     tileset = null
 
     unless data?
@@ -63,6 +67,10 @@ class SaviorsEditorView extends View
       unless level?
         @popMessage "Tilemap file not found or invalid!"
         return
+
+      unless @tilemapWatcher?
+        @tilemapWatcher = PathWatcher.watch(dir + data["tilemap"], =>
+          @render(@getText(editor)))
 
       width  = @canvas[0].width  = @overlay[0].width  = level.width * @TILE_SIZE
       height = @canvas[0].height = @overlay[0].height = level.height * @TILE_SIZE
@@ -151,8 +159,8 @@ class SaviorsEditorView extends View
 
     return level
 
-  getText: ->
-    text = atom.workspace.activePaneItem.getText()
+  getText: (editor)->
+    text = editor.getText()
     try
       doc = jsyaml.safeLoad text
       return doc
