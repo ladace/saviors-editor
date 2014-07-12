@@ -1,5 +1,6 @@
 {View} = require 'atom'
 PathWatcher = require 'pathwatcher'
+{Range, Point} = require 'text-buffer'
 jsyaml = require 'js-yaml'
 fs = require 'fs'
 
@@ -39,10 +40,10 @@ class SaviorsEditorView extends View
       @detach()
     else
       @subscribe editor.getBuffer(), 'contents-modified', =>
-        @render(@getText(editor))
+        @render(@getYAMLDoc(editor))
       @subscribe editor, 'cursors-moved', =>
         @renderCursor(editor)
-      @render(@getText(editor))
+      @render(@getYAMLDoc(editor))
       @renderCursor(editor)
       atom.workspaceView.appendToRight(this)
 
@@ -62,15 +63,34 @@ class SaviorsEditorView extends View
 
     doit = =>
       # open the tilemap file
-      level = @readLevel(dir + data["tilemap"])
+      tilemapPath = new PathWatcher.File(dir + data["tilemap"]).getPath()
+      level = @readLevel(tilemapPath)
 
       unless level?
         @popMessage "Tilemap file not found or invalid!"
         return
 
+      # set up file watcher for the level array file
+      if @tilemapWatcher? and @tilemapWatcher.path != tilemapPath
+        @tilemapWatcher.close()
+        @tilemapWatcher = null
+
       unless @tilemapWatcher?
-        @tilemapWatcher = PathWatcher.watch(dir + data["tilemap"], =>
-          @render(@getText(editor)))
+        @tilemapWatcher = PathWatcher.watch(tilemapPath, =>
+          @render(@getYAMLDoc(editor)))
+
+      # set the editor watcher for the level array file
+      pane = atom.workspace.paneForUri tilemapPath
+      if pane?
+        tileEditor = pane.itemForUri tilemapPath
+        if @tileEditor != tileEditor
+          if @tileEditor?
+            @unsubscribe @tileEditor
+          @tileEditor = tileEditor
+          if @tileEditor?
+            @subscribe @tileEditor, 'cursors-moved', =>
+              @renderTileEditorCursor(@tileEditor)
+
 
       width  = @canvas[0].width  = @overlay[0].width  = level.width * @TILE_SIZE
       height = @canvas[0].height = @overlay[0].height = level.height * @TILE_SIZE
@@ -159,7 +179,7 @@ class SaviorsEditorView extends View
 
     return level
 
-  getText: (editor)->
+  getYAMLDoc: (editor)->
     text = editor.getText()
     try
       doc = jsyaml.safeLoad text
@@ -204,3 +224,29 @@ class SaviorsEditorView extends View
     editor.getBuffer().scanInRange /[^\s]+/g, currentRange, ({range}) ->
       ranges.push range
     editor.setSelectedBufferRanges(ranges)
+
+  renderTileEditorCursor: (editor)->
+    # render the cursor in tile editor
+    c = editor.getCursor()
+    buf = editor.getBuffer()
+    curPos = c.getBufferPosition()
+    behRange = new Range buf.getFirstPosition(), curPos
+    # aftRange = new Range curPos, buf.getEndPosition()
+
+    startRow = null
+    buf.backwardsScanInRange /<\/?Layer/, behRange, ({matchText, range})=>
+      if matchText == "<Layer"
+        startRow = range.getRows()[0]
+
+    ctx = @overlay[0].getContext '2d'
+    ctx.clearRect 0, 0, @overlay[0].width, @overlay[0].height
+    ctx.strokeStyle = "orange"
+
+    if startRow?
+      rN = c.getBufferRow() - startRow
+      cN = 0
+
+      lBehRange = new Range new Point(curPos.row, 0), curPos
+      buf.scanInRange /\b[+\-\d]+\b\s/g, lBehRange, -> cN += 1
+
+      ctx.strokeRect cN * @TILE_SIZE, rN * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
