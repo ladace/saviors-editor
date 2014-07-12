@@ -124,12 +124,13 @@ class SaviorsEditorView extends View
                   v.x = 0; v.y = 0
 
             prevPos = path[0]
+            reversed = (ai.direction == 'backward')
             for v in path[1..]
-              @drawDirectionalLine ctx, prevPos, v
+              @drawDirectionalLine ctx, prevPos, v, reversed
               prevPos = v
 
             if ai.type == 'circular'
-              @drawDirectionalLine ctx, prevPos, path[0]
+              @drawDirectionalLine ctx, prevPos, path[0], reversed
 
             startPoint = null
             for v in path
@@ -206,7 +207,12 @@ class SaviorsEditorView extends View
         ctx.arc (parseInt(m[1]) + 0.5) * @TILE_SIZE, (parseInt(m[2]) + 0.5) * @TILE_SIZE, 2.5, 0, 2 * Math.PI
         ctx.stroke()
 
-  drawDirectionalLine: (ctx, a, b) ->
+  drawDirectionalLine: (ctx, a, b, reversed) ->
+    if reversed
+      t = a
+      a = b
+      b = t
+
     grad= ctx.createLinearGradient(a.x, a.y, b.x, b.y)
     grad.addColorStop(0, "yellow")
     grad.addColorStop(1, "red")
