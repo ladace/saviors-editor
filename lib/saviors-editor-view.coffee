@@ -94,14 +94,13 @@ class SaviorsEditorView extends View
                 else
                   v.x = 0; v.y = 0
 
-            ctx.strokeStyle = "yellow"
-            ctx.beginPath()
-            ctx.moveTo(path[0].x, path[0].y)
+            prevPos = path[0]
             for v in path[1..]
-              ctx.lineTo(v.x, v.y)
+              @drawDirectionalLine ctx, prevPos, v
+              prevPos = v
+
             if ai.type == 'circular'
-              ctx.lineTo(path[0].x, path[0].y)
-            ctx.stroke()
+              @drawDirectionalLine ctx, prevPos, path[0]
 
             startPoint = null
             for v in path
@@ -177,3 +176,12 @@ class SaviorsEditorView extends View
         ctx.beginPath()
         ctx.arc (parseInt(m[1]) + 0.5) * @TILE_SIZE, (parseInt(m[2]) + 0.5) * @TILE_SIZE, 2.5, 0, 2 * Math.PI
         ctx.stroke()
+  drawDirectionalLine: (ctx, a, b) ->
+    grad= ctx.createLinearGradient(a.x, a.y, b.x, b.y)
+    grad.addColorStop(0, "yellow")
+    grad.addColorStop(1, "red")
+    ctx.strokeStyle = grad
+    ctx.beginPath()
+    ctx.moveTo(a.x, a.y)
+    ctx.lineTo(b.x, b.y)
+    ctx.stroke()
