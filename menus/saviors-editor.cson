@@ -10,6 +10,7 @@
       'label': 'saviors-editor'
       'submenu': [
         { 'label': 'Toggle', 'command': 'saviors-editor:toggle' }
+        { 'label': 'Choose Cells', 'command': 'saviors-editor:select-words' }
       ]
     ]
   }

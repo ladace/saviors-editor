@@ -3,7 +3,7 @@
   "main": "./lib/saviors-editor",
   "version": "0.0.0",
   "description": "A short description of your package",
-  "activationEvents": ["saviors-editor:toggle"],
+  "activationEvents": ["saviors-editor:toggle", "saviors-editor:select-words"],
   "repository": "https://github.com/atom/saviors-editor",
   "license": "MIT",
   "engines": {

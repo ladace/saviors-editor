@@ -17,6 +17,7 @@ class SaviorsEditorView extends View
 
   initialize: (serializeState) ->
     atom.workspaceView.command "saviors-editor:toggle", => @toggle()
+    atom.workspaceView.command "saviors-editor:select-words", => @selectWords()
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->
@@ -176,6 +177,7 @@ class SaviorsEditorView extends View
         ctx.beginPath()
         ctx.arc (parseInt(m[1]) + 0.5) * @TILE_SIZE, (parseInt(m[2]) + 0.5) * @TILE_SIZE, 2.5, 0, 2 * Math.PI
         ctx.stroke()
+
   drawDirectionalLine: (ctx, a, b) ->
     grad= ctx.createLinearGradient(a.x, a.y, b.x, b.y)
     grad.addColorStop(0, "yellow")
@@ -185,3 +187,12 @@ class SaviorsEditorView extends View
     ctx.moveTo(a.x, a.y)
     ctx.lineTo(b.x, b.y)
     ctx.stroke()
+
+  selectWords: ->
+    console.log "choose"
+    editor = atom.workspace.activePaneItem
+    currentRange = editor.getSelectedBufferRange()
+    ranges = []
+    editor.getBuffer().scanInRange /[^\s]+/g, currentRange, ({range}) ->
+      ranges.push range
+    editor.setSelectedBufferRanges(ranges)

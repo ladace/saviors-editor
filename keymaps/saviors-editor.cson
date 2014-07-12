@@ -9,3 +9,4 @@
 # https://atom.io/docs/latest/advanced/keymaps
 '.workspace':
   'ctrl-alt-e': 'saviors-editor:toggle'
+  'ctrl-alt-i': 'saviors-editor:select-words'
