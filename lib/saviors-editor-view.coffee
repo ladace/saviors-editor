@@ -8,6 +8,7 @@ class SaviorsEditorView extends View
   @content: ->
     @div class: 'saviors-editor', =>
       @canvas outlet: "canvas", width: '200', height: '200'
+      @canvas outlet: "overlay", class: "overlay-canvas"
       @div outlet: "mbox", class: "mbox", =>
         @div "Nothing"
 
@@ -32,7 +33,10 @@ class SaviorsEditorView extends View
     else
       @subscribe editor.getBuffer(), 'contents-modified', =>
         @render(@getText())
+      @subscribe editor, 'cursors-moved', =>
+        @renderCursor(editor)
       @render(@getText())
+      @renderCursor(editor)
       atom.workspaceView.appendToRight(this)
 
   render: (data) ->
@@ -48,8 +52,8 @@ class SaviorsEditorView extends View
 
     # open the tilemap file
     level = @readLevel(dir + data["tilemap"])
-    width = @canvas[0].width = level.width * 10
-    height = @canvas[0].height = level.height * 10
+    width  = @canvas[0].width  = @overlay[0].width  = level.width * 10
+    height = @canvas[0].height = @overlay[0].height = level.height * 10
 
     ctx = @canvas[0].getContext('2d')
     ctx.fillStyle = 'white'
@@ -66,8 +70,8 @@ class SaviorsEditorView extends View
       for a in data.AI
         if a.path?
           for v in a.path
-            v.x = v.x * 10 + 5
-            v.y = v.y * 10 + 5
+            v.x = v.p[0] * 10 + 5
+            v.y = v.p[1] * 10 + 5
 
           ctx.strokeStyle = "blue"
           ctx.beginPath()
@@ -119,3 +123,14 @@ class SaviorsEditorView extends View
 
   clearMessage: (msg) ->
     @mbox.css(display: "none")
+
+  renderCursor: (editor) ->
+    ctx = @overlay[0].getContext '2d'
+    ctx.clearRect 0, 0, @overlay[0].width, @overlay[0].height
+    ctx.strokeStyle = "orange"
+    for c in editor.getCursors()
+      m = c.getCurrentBufferLine().match(/\[\s*(\d+),\s*(\d+)\s*\]/)
+      if m? and m[1]? and m[2]?
+        ctx.beginPath()
+        ctx.arc m[1] * 10 + 5, m[2] * 10 + 5, 2.5, 0, 2 * Math.PI
+        ctx.stroke()
