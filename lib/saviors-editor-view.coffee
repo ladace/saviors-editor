@@ -48,10 +48,10 @@ class SaviorsEditorView extends View
     dir = atom.workspace.activePaneItem.getPath().match(/.*\//)[0]
     tileset = null
 
-    if data == null
+    unless data?
       @popMessage "Not a valid YAML file!"
       return
-    if ! data["tilemap"]?
+    unless data["tilemap"]?
       @popMessage "Tilemap reference not found!"
       return
 
@@ -59,7 +59,7 @@ class SaviorsEditorView extends View
       # open the tilemap file
       level = @readLevel(dir + data["tilemap"])
 
-      if !level?
+      unless level?
         @popMessage "Tilemap file not found or invalid!"
         return
 
@@ -114,7 +114,7 @@ class SaviorsEditorView extends View
                 ctx.stroke()
 
             # Draw start point
-            if !startPoint? then startPoint = path[0]
+            unless startPoint? then startPoint = path[0]
             ctx.strokeStyle = "rgb(0.5, 1, 0.5)"
             ctx.beginPath()
             ctx.rect startPoint.x - 6, startPoint.y - 6, 12, 12
