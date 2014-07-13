@@ -115,13 +115,15 @@ class SaviorsEditorView extends View
           if ai? and ai.path?
             path = []
             for v in ai.path
-              if v?
+              if v? and v instanceof Object
                 path.push v
                 if v.p?
+                  v.p[0] ?= 0
+                  v.p[1] ?= 0
                   v.x = (v.p[0] + 0.5) * @TILE_SIZE
                   v.y = (v.p[1] + 0.5) * @TILE_SIZE
-                else
-                  v.x = 0; v.y = 0
+
+                v.x ?= 0; v.y ?= 0;
 
             prevPos = path[0]
             reversed = (ai.direction == 'backward')
@@ -144,10 +146,9 @@ class SaviorsEditorView extends View
 
             # Draw start point
             unless startPoint? then startPoint = path[0]
-            ctx.strokeStyle = "rgb(0.5, 1, 0.5)"
-            ctx.beginPath()
-            ctx.rect startPoint.x - 6, startPoint.y - 6, 12, 12
-            ctx.stroke()
+            if startPoint?
+              ctx.strokeStyle = "rgb(0.5, 1, 0.5)"
+              ctx.strokeRect startPoint.x - 6, startPoint.y - 6, 12, 12
 
     if data["tileset"]?
       tileset = new Image()
@@ -208,6 +209,7 @@ class SaviorsEditorView extends View
         ctx.stroke()
 
   drawDirectionalLine: (ctx, a, b, reversed) ->
+    reversed ?= false
     if reversed
       t = a
       a = b
