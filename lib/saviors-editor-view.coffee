@@ -110,8 +110,8 @@ class SaviorsEditorView extends View
             if id == 0
               ctx.fillRect x * @TILE_SIZE, y * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
 
-      if data.Guards?
-        for ai in data.Guards
+      if data.guards?
+        for ai in data.guards
           if ai? and ai.path?
             path = []
             for v in ai.path
