@@ -227,10 +227,10 @@ class SaviorsEditorView extends View
   selectWords: ->
     console.log "choose"
     editor = atom.workspace.activePaneItem
-    currentRange = editor.getSelectedBufferRange()
     ranges = []
-    editor.getBuffer().scanInRange /[^\s]+/g, currentRange, ({range}) ->
-      ranges.push range
+    for currentRange in editor.getSelectedBufferRanges()
+      editor.getBuffer().scanInRange /[^\s]+/g, currentRange, ({range}) ->
+        ranges.push range
     editor.setSelectedBufferRanges(ranges)
 
   renderTileEditorCursor: (editor)->
@@ -239,22 +239,23 @@ class SaviorsEditorView extends View
     ctx.strokeStyle = "orange"
 
     # render the cursor in tile editor
-    for c in editor.getCursors()
-      buf = editor.getBuffer()
-      curPos = c.getBufferPosition()
-      behRange = new Range buf.getFirstPosition(), curPos
-      # aftRange = new Range curPos, buf.getEndPosition()
+    c = editor.getCursor()
+    
+    buf = editor.getBuffer()
+    curPos = c.getBufferPosition()
+    behRange = new Range buf.getFirstPosition(), curPos
+    # aftRange = new Range curPos, buf.getEndPosition()
 
-      startRow = null
-      buf.backwardsScanInRange /<\/?Layer/, behRange, ({matchText, range})=>
-        if matchText == "<Layer"
-          startRow = range.getRows()[0]
+    startRow = null
+    buf.backwardsScanInRange /<\/?Layer/, behRange, ({matchText, range})=>
+      if matchText == "<Layer"
+        startRow = range.getRows()[0] + 1
 
-      if startRow?
-        rN = c.getBufferRow() - startRow
-        cN = 0
+    if startRow?
+      rN = c.getBufferRow() - startRow
+      cN = 0
 
-        lBehRange = new Range new Point(curPos.row, 0), curPos
-        buf.scanInRange /\b[+\-\d]+\b\s/g, lBehRange, -> cN += 1
+      lBehRange = new Range new Point(curPos.row, 0), curPos
+      buf.scanInRange /[+\-\d]+\s/g, lBehRange, -> cN += 1
 
-        ctx.strokeRect cN * @TILE_SIZE, rN * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
+      ctx.strokeRect cN * @TILE_SIZE, rN * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
