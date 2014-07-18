@@ -171,7 +171,7 @@ class SaviorsEditorView extends View
     if layer == null
       console.log "no layer xml node!"
       return null
-    arr = layer.textContent.split("\n").map((r) ->
+    arr = layer.textContent.split("\n").filter((r) -> r != "").map((r) ->
       r.split(" ").map((i) -> parseInt i))
 
     level =
@@ -234,27 +234,27 @@ class SaviorsEditorView extends View
     editor.setSelectedBufferRanges(ranges)
 
   renderTileEditorCursor: (editor)->
-    # render the cursor in tile editor
-    c = editor.getCursor()
-    buf = editor.getBuffer()
-    curPos = c.getBufferPosition()
-    behRange = new Range buf.getFirstPosition(), curPos
-    # aftRange = new Range curPos, buf.getEndPosition()
-
-    startRow = null
-    buf.backwardsScanInRange /<\/?Layer/, behRange, ({matchText, range})=>
-      if matchText == "<Layer"
-        startRow = range.getRows()[0]
-
     ctx = @overlay[0].getContext '2d'
     ctx.clearRect 0, 0, @overlay[0].width, @overlay[0].height
     ctx.strokeStyle = "orange"
 
-    if startRow?
-      rN = c.getBufferRow() - startRow
-      cN = 0
+    # render the cursor in tile editor
+    for c in editor.getCursors()
+      buf = editor.getBuffer()
+      curPos = c.getBufferPosition()
+      behRange = new Range buf.getFirstPosition(), curPos
+      # aftRange = new Range curPos, buf.getEndPosition()
 
-      lBehRange = new Range new Point(curPos.row, 0), curPos
-      buf.scanInRange /\b[+\-\d]+\b\s/g, lBehRange, -> cN += 1
+      startRow = null
+      buf.backwardsScanInRange /<\/?Layer/, behRange, ({matchText, range})=>
+        if matchText == "<Layer"
+          startRow = range.getRows()[0]
 
-      ctx.strokeRect cN * @TILE_SIZE, rN * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
+      if startRow?
+        rN = c.getBufferRow() - startRow
+        cN = 0
+
+        lBehRange = new Range new Point(curPos.row, 0), curPos
+        buf.scanInRange /\b[+\-\d]+\b\s/g, lBehRange, -> cN += 1
+
+        ctx.strokeRect cN * @TILE_SIZE, rN * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
