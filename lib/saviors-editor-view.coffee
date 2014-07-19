@@ -95,8 +95,9 @@ class SaviorsEditorView extends View
       width  = @canvas[0].width  = @overlay[0].width  = level.width * @TILE_SIZE
       height = @canvas[0].height = @overlay[0].height = level.height * @TILE_SIZE
 
+      # render tilemap
       ctx = @canvas[0].getContext('2d')
-      ctx.fillStyle = 'rgb(0.2, 0, 0.2)'
+      ctx.fillStyle = 'rgb(0, 0, 0)'
       ctx.fillRect 0, 0, width, height
 
       ctx.fillStyle = 'green'
@@ -109,6 +110,23 @@ class SaviorsEditorView extends View
           else
             if id == 0
               ctx.fillRect x * @TILE_SIZE, y * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
+
+      # render underground paths
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'
+
+      for path in level.underPaths
+        for part in path
+          switch part.type
+            when 'h'
+              for x in [part.h1..part.h2]
+                ctx.fillRect x * @TILE_SIZE, part.v * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
+            when 'v'
+              for y in [part.v1..part.v2]
+                ctx.fillRect part.h * @TILE_SIZE, y * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
+            when 'e'
+              ctx.fillStyle = 'rgba(0, 255, 255, 0.2)'
+              ctx.fillRect part.x * @TILE_SIZE, part.y * @TILE_SIZE, @TILE_SIZE, @TILE_SIZE
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'
 
       if data.guards?
         for ai in data.guards
@@ -174,10 +192,39 @@ class SaviorsEditorView extends View
     arr = layer.textContent.split("\n").filter((r) -> r != "").map((r) ->
       r.split(" ").map((i) -> parseInt i))
 
+    underPaths = []
+    for underPath in dom.getElementsByTagName('UnderPath')
+      underPathObj = []
+      for c in underPath.children
+        if c.tagName == "H"
+          m = c.textContent.match /(\d+)-(\d+),\s*(\d+)/
+          underPathObj.push
+            type: 'h'
+            h1: m[1]
+            h2: m[2]
+            v: m[3]
+        if c.tagName == "V"
+          m = c.textContent.match /(\d+),\s*(\d+)-(\d+)/
+          underPathObj.push
+            type: 'v'
+            h: m[1]
+            v1: m[2]
+            v2: m[3]
+        if c.tagName == "Entrance"
+          m = c.textContent.match /(\d+),\s*(\d+)/
+          underPathObj.push
+            type: 'e'
+            x: m[1]
+            y: m[2]
+
+      underPaths.push underPathObj
+    console.log underPaths
+
     level =
       width: arr[0].length
       height: arr.length
       content: arr
+      underPaths: underPaths
 
     return level
 
@@ -240,7 +287,7 @@ class SaviorsEditorView extends View
 
     # render the cursor in tile editor
     c = editor.getCursor()
-    
+
     buf = editor.getBuffer()
     curPos = c.getBufferPosition()
     behRange = new Range buf.getFirstPosition(), curPos
