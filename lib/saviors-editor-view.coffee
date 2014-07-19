@@ -200,22 +200,22 @@ class SaviorsEditorView extends View
           m = c.textContent.match /(\d+)-(\d+),\s*(\d+)/
           underPathObj.push
             type: 'h'
-            h1: m[1]
-            h2: m[2]
-            v: m[3]
+            h1: parseFloat m[1]
+            h2: parseFloat m[2]
+            v: parseFloat m[3]
         if c.tagName == "V"
           m = c.textContent.match /(\d+),\s*(\d+)-(\d+)/
           underPathObj.push
             type: 'v'
-            h: m[1]
-            v1: m[2]
-            v2: m[3]
+            h: parseFloat m[1]
+            v1: parseFloat m[2]
+            v2: parseFloat m[3]
         if c.tagName == "Entrance"
           m = c.textContent.match /(\d+),\s*(\d+)/
           underPathObj.push
             type: 'e'
-            x: m[1]
-            y: m[2]
+            x: parseFloat m[1]
+            y: parseFloat m[2]
 
       underPaths.push underPathObj
     console.log underPaths
